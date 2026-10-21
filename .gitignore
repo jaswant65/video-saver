@@ -1,0 +1,18 @@
+# Personal libraries, transfer history and runtime files must never be published.
+/library/
+/library.sqlite3*
+/running.json
+*.log
+*.part
+/.venv/
+__pycache__/
+*.py[cod]
+/.env
+/.env.*
+.DS_Store
+Thumbs.db
+/.idea/
+/.vscode/
+/dist/
+/build/
+*.zip

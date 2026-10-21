@@ -1,0 +1,3 @@
+# Download engine only. The web app uses Python's standard library.
+# The default extras include the JavaScript support recommended by yt-dlp.
+yt-dlp[default]

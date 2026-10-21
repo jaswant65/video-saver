@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible problem with Video Saver.
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include private videos, account credentials, cookies, local addresses, database files, or personal URLs. For security issues, follow SECURITY.md."
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Windows 11 / Python 3.14 / Video Saver 1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Explain what you did, what happened, and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Sanitized error message
+      description: Remove private paths, network addresses, URLs, and account information.

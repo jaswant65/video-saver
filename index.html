@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10251e" />
+    <title>Video Saver · Your local library</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="top">
+      <a href="/" class="brand"
+        ><span class="mark">▶</span> Video Saver<span class="local-badge"
+          >LOCAL</span
+        ></a
+      ><span id="connection" class="connection">Connecting…</span>
+    </header>
+    <main>
+      <section class="intro">
+        <div class="eyebrow">YOUR NETWORK. YOUR LIBRARY.</div>
+        <h1>A little home<br />for your videos<span>.</span></h1>
+        <p>
+          Save a link or upload a video. Watch and download it from any device
+          on your network.
+        </p>
+      </section>
+      <section class="save-panel" aria-label="Save a video">
+        <div class="tabs" role="tablist" aria-label="Save method">
+          <button
+            id="link-tab"
+            role="tab"
+            aria-selected="true"
+            aria-controls="link-panel"
+          >
+            ↗ Save from a link</button
+          ><button
+            id="upload-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="upload-panel"
+            tabindex="-1"
+          >
+            ↑ Upload a video
+          </button>
+        </div>
+        <div
+          id="link-panel"
+          class="panel-body"
+          role="tabpanel"
+          aria-labelledby="link-tab"
+        >
+          <form id="link-form">
+            <label for="video-url">VIDEO LINK</label>
+            <div class="url-row">
+              <input
+                id="video-url"
+                type="url"
+                inputmode="url"
+                placeholder="Paste a video link here…"
+                required
+                autocomplete="off"
+              /><button id="save-button" class="primary" type="submit" disabled>
+                Save video <span>↗</span>
+              </button>
+            </div>
+            <div class="form-bottom">
+              <p>Direct video links and sites supported by yt-dlp.</p>
+              <label class="quality" for="quality"
+                >Quality
+                <select id="quality">
+                  <option value="1080">Up to 1080p</option>
+                  <option value="720">Up to 720p</option>
+                  <option value="best">Best available</option>
+                </select></label
+              >
+            </div>
+          </form>
+        </div>
+        <div
+          id="upload-panel"
+          class="panel-body"
+          role="tabpanel"
+          aria-labelledby="upload-tab"
+          hidden
+        >
+          <label for="file-input" class="drop-zone" id="drop-zone"
+            ><span class="upload-symbol">↑</span
+            ><strong>Choose a video or drop it here</strong
+            ><span>MP4, MOV, WebM, MKV and more · up to 8 GB per video</span
+            ><input
+              type="file"
+              id="file-input"
+              accept="video/*,.mkv,.ts"
+              multiple
+          /></label>
+          <div id="upload-status" role="status"></div>
+        </div>
+        <p id="form-message" role="status" class="form-message" hidden></p>
+      </section>
+      <section class="network-strip">
+        <span class="network-icon">⌁</span>
+        <div>
+          <strong>One library. Every device.</strong>
+          <p>
+            Open this address on a phone, tablet, or computer connected to your
+            router.
+          </p>
+        </div>
+        <button class="copy-link" id="copy-link" title="Copy network link">
+          <span id="network-link">Finding your link…</span><span>⧉</span>
+        </button>
+      </section>
+      <section class="library">
+        <div class="library-heading">
+          <div>
+            <h2>Your library <span id="video-count">0</span></h2>
+            <p id="library-note">
+              Videos live on this computer and are shared across your network.
+            </p>
+          </div>
+          <label class="search-label"
+            ><span>⌕</span
+            ><input
+              type="search"
+              id="search"
+              placeholder="Find a video…"
+              aria-label="Search your library"
+          /></label>
+        </div>
+        <div id="jobs" class="jobs" aria-live="polite"></div>
+        <div id="videos" class="videos"></div>
+        <div id="empty" class="empty">
+          <div class="empty-art"><span>▶</span></div>
+          <h3>Your next favorite goes here.</h3>
+          <p>Paste a video link above, or upload one from your device.</p>
+        </div>
+      </section>
+      <footer>
+        <span>● Stored locally, shared on your network.</span
+        ><span id="free-space"></span>
+      </footer>
+    </main>
+    <dialog id="player-dialog">
+      <div class="player-heading">
+        <h3 id="player-title"></h3>
+        <button id="close-player" aria-label="Close video">✕</button>
+      </div>
+      <video id="player" controls playsinline preload="metadata"></video>
+      <p>
+        Some formats may need downloading to play in your device’s video app.
+      </p>
+    </dialog>
+    <div id="toast" role="status" hidden></div>
+  </body>
+</html>
