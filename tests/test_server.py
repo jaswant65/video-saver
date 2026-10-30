@@ -99,7 +99,7 @@ class ServerIntegrationTests(unittest.TestCase):
             self.assertEqual(response.headers['Cache-Control'], 'no-store')
             state = json.load(response)
         self.assertEqual(state['app'], 'video-saver')
-        self.assertEqual(state['version'], '1.0.0')
+        self.assertEqual(state['version'], '1.0.1')
         self.assertEqual(state['links'], [self.base])
         self.assertGreater(len(state['csrf']), 20)
 
@@ -130,7 +130,7 @@ class ServerIntegrationTests(unittest.TestCase):
         self.assertTrue(job['file'].endswith('/_CON.mp4'))
 
     def test_private_files_are_not_exposed(self):
-        for path in ('/library.sqlite3', '/server.py', '/.env', '/files/../server.py', '/files/%2e%2e/library.sqlite3'):
+        for path in ('/library.sqlite3', '/server.py', '/.env', '/.local-settings.json', '/files/../server.py', '/files/%2e%2e/library.sqlite3'):
             with self.subTest(path=path):
                 self.assert_status(404, path)
 
@@ -179,7 +179,7 @@ class ServerIntegrationTests(unittest.TestCase):
         subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i',
                         'color=c=green:s=320x180:r=12:d=1', '-f', 'lavfi', '-i', 'anullsrc', '-t', '1',
                         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', '-y', str(sample)], check=True)
-        job, _ = self.upload('generated-smoke.mp4', sample.read_bytes())
+        job, _ = self.upload('generated–He’d-smoke.mp4', sample.read_bytes())
         state = self.request_json('/api/state')
         result = self.request_json('/api/download', data=json.dumps({'url': self.base + job['url'], 'quality': '1080'}).encode(),
                                    headers={'X-App-Key': state['csrf'], 'Content-Type': 'application/json'})

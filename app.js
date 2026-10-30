@@ -86,6 +86,25 @@ function render() {
     );
   $("videos").replaceChildren();
   $("jobs").replaceChildren();
+  const newestComplete = Math.max(0, ...complete.map((job) => job.created));
+  let failedHistory = null;
+  function appendJob(box, job) {
+    if (job.status === "failed" && job.created < newestComplete) {
+      if (!failedHistory) {
+        failedHistory = element("details", "failed-history");
+        const count = state.jobs.filter(
+          (item) => item.status === "failed" && item.created < newestComplete,
+        ).length;
+        failedHistory.append(
+          element("summary", "", count + " earlier unsuccessful attempt" + (count === 1 ? "" : "s")),
+        );
+        $("jobs").append(failedHistory);
+      }
+      failedHistory.append(box);
+    } else {
+      $("jobs").append(box);
+    }
+  }
   for (const job of state.jobs
     .filter((j) => j.status !== "complete")
     .slice(0, 20)) {
@@ -126,7 +145,7 @@ function render() {
       bar.append(fill);
       box.append(bar);
     }
-    $("jobs").append(box);
+    appendJob(box, job);
   }
   for (const job of shown) {
     const card = element("article", "video-card");

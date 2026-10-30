@@ -9,6 +9,7 @@ __pycache__/
 *.py[cod]
 /.env
 /.env.*
+/.local-settings.json
 .DS_Store
 Thumbs.db
 /.idea/

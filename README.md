@@ -99,6 +99,7 @@ The current release has been checked on Windows. macOS/Linux launch commands and
 - **Everyone who can access the network link shares the same library. There are no user accounts or passwords.** Use it on a trusted local network.
 - The Git ignore rules exclude libraries, databases, logs, runtime records, virtual environments, and environment files. Review your files before sharing a modified copy.
 - Back up `library/` and `library.sqlite3` together while the app is stopped. Do not put either in GitHub.
+- Host runtime paths in `.local-settings.json` are ignored by Git and are not served to browsers. The example file contains placeholders only.
 
 This is a local-network tool. It is not designed for public internet hosting: do not port-forward it or expose it through a public tunnel.
 
@@ -126,6 +127,26 @@ To store runtime data elsewhere, set the `VIDEO_SAVER_DATA_DIR` environment vari
 
 ## Troubleshooting
 
+### Update an existing installation
+
+Stop the app, update the source (or extract the new source into your app folder while preserving your local library), run **Setup.cmd** again, then restart. On macOS/Linux, run `python3 setup_local.py` after updating. The setup helper upgrades yt-dlp and its default extras in the project's private environment. Do not replace or publish your `library/`, database, logs, virtual environment, or host settings when updating the source.
+
+### Use a runtime outside PATH
+
+YouTube uses JavaScript challenges that need a supported runtime. Install Node.js 22+ or Deno 2.3+; check the [current yt-dlp requirements](https://github.com/yt-dlp/yt-dlp/wiki/EJS) when troubleshooting. If the server cannot find the installed runtime, copy `.local-settings.example.json` to `.local-settings.json` and replace the placeholder with the actual executable path on the host. For example:
+
+```json
+{
+  "node": "C:/path/to/node.exe"
+}
+```
+
+Use the key `deno` for Deno instead, or set the host's `VIDEO_SAVER_NODE` / `VIDEO_SAVER_DENO` environment variable. Restart after changing host configuration. No network endpoint can change these executable paths. Personal paths belong only in the ignored local file, never the example or a Git commit.
+
+The app explicitly selects the configured runtime and forces UTF-8 output from the downloader. Before recording success it checks the final file and, when available, uses ffprobe to verify readable video. This avoids showing a completed download as failed because of punctuation in its filename or the downloader's stop status. Earlier failed attempts are grouped after a later successful save; history is retained.
+
+### Common issues
+
 | Problem | Try this |
 | --- | --- |
 | Connection refused | Start the app, check the host is awake, and use the latest network link. |
@@ -134,6 +155,7 @@ To store runtime data elsewhere, set the `VIDEO_SAVER_DATA_DIR` environment vari
 | Python is missing | Install Python 3.11+, reopen the terminal, and run Setup.cmd again. |
 | yt-dlp is missing | Run Setup.cmd or `python3 setup_local.py`, then restart the app. |
 | Download fails or a site stops working | Update yt-dlp, verify FFmpeg/runtime installation, and try a fresh direct link. Sites may restrict automated downloads or require login. |
+| YouTube asks for sign-in or bot verification | This is a restriction from YouTube. Runtime setup and updates can help compatibility but cannot guarantee access. The app does not automatically read browser cookies or use a signed-in account. |
 | A video will not play | Download it and open it in a player that supports its codecs. Remuxing to MP4 does not convert codecs. |
 | Quality is not exactly 1080p | The selector sets a maximum where resolution metadata exists; it does not upscale. Some direct links have unknown resolution. |
 | A transfer was interrupted | Submit it again. The app keeps finished videos, but does not resume interrupted jobs after a restart. |
@@ -144,7 +166,7 @@ Windows launch diagnostics are in `server.log` and `server-error.log`. After mov
 
 ## Limits
 
-- Single videos only; playlists are disabled.
+- At most one item is saved per link; bulk playlist downloads are disabled.
 - Link downloads have an 8 GB yt-dlp size filter and a one-hour timeout. Some sources cannot report their final size in advance; this is not a hard disk quota. Uploads have a strict 8 GB request limit.
 - The app does not import browser cookies, bypass DRM, or promise support for every site.
 - Share only videos you have permission to save and redistribute, and follow the source site's rules.

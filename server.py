@@ -19,6 +19,7 @@ import sys
 import threading
 import time
 import uuid
+from runtime_support import runtime_arguments, explain_download_error, completed_video
 
 ROOT = Path(__file__).resolve().parent
 DATA_ROOT = Path(os.environ.get('VIDEO_SAVER_DATA_DIR', ROOT)).resolve()
@@ -85,14 +86,13 @@ def download(job_id, url, quality):
     folder.mkdir(exist_ok=True)
     update(job_id, status='downloading', detail='Finding video…')
     formats = {'best': 'bv*+ba/b', '1080': 'bv*[height<=?1080]+ba/b[height<=?1080]', '720': 'bv*[height<=?720]+ba/b[height<=?720]'}
-    command = [*YTDLP, '--ignore-config', '--no-plugin-dirs', '--no-playlist', '--no-cache-dir',
+    command = [*YTDLP, '--ignore-config', '--no-plugin-dirs', '--no-playlist', '--playlist-items', '1', '--no-cache-dir', '--encoding', 'utf-8',
                '--windows-filenames', '--no-colors', '--newline', '--progress', '--socket-timeout', '30',
-               '--retries', '3', '--max-filesize', '8G', '--max-downloads', '1',
+               '--retries', '3', '--max-filesize', '8G',
                '-f', formats[quality], '--merge-output-format', 'mp4', '--remux-video', 'mp4',
                '--progress-template', 'download:PROGRESS:%(progress._percent_str)s',
                '--print', 'after_move:FILE:%(filepath)s', '-o', str(folder / '%(title).160B.%(ext)s')]
-    if shutil.which('node'):
-        command += ['--js-runtimes', 'node:' + shutil.which('node')]
+    command += runtime_arguments(ROOT)
     if shutil.which('ffmpeg'):
         command += ['--ffmpeg-location', shutil.which('ffmpeg')]
     command += ['--', url]
@@ -125,13 +125,14 @@ def download(job_id, url, quality):
         code = process.wait()
         if expired.is_set():
             raise ValueError('Download took longer than one hour. Try a shorter video.')
-        if final and final.is_file() and final.is_relative_to(folder.resolve()) and final.suffix.lower() in VIDEO_EXTS:
+        final=completed_video(folder,final,code,VIDEO_EXTS)
+        if final:
             update(job_id, title=final.stem, status='complete', progress=100,
                    detail='Ready to watch or download', file=final.relative_to(DATA).as_posix(), size=final.stat().st_size)
         else:
             raise ValueError(errors[-1] if errors else ('This link could not be saved. Try a direct video link or another supported site. (Exit %s)' % code))
     except Exception as exc:
-        update(job_id, status='failed', detail=str(exc)[:500])
+        update(job_id, status='failed', detail=explain_download_error(exc))
     finally:
         if timer:
             timer.cancel()
@@ -141,7 +142,7 @@ def download(job_id, url, quality):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = 'VideoSaver/1.0'
+    server_version = 'VideoSaver/1.0.1'
 
     def end_headers(self):
         self.send_header('X-Content-Type-Options', 'nosniff')
@@ -189,11 +190,15 @@ class Handler(BaseHTTPRequestHandler):
             with connect() as db:
                 jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC')]
             for job in jobs:
+                if job['status']=='failed':
+                    job['detail']=explain_download_error(job['detail'])
                 if job['file']:
                     job['url'] = '/files/' + quote(job['file'])
                     job['download_url'] = job['url'] + '?download=1'
             addresses = ['127.0.0.1'] if self.server.server_address[0] == '127.0.0.1' else local_addresses()
-            self.json({'app': 'video-saver', 'version': '1.0.0', 'jobs': jobs, 'csrf': CSRF, 'downloader': bool(YTDLP),
+            runtime=runtime_arguments(ROOT)
+            self.json({'app': 'video-saver', 'version': '1.0.1', 'jobs': jobs, 'csrf': CSRF, 'downloader': bool(YTDLP),
+                       'youtube_runtime':runtime[-1].split(':',1)[0] if runtime else '',
                        'links': ['http://%s:%s' % (a, self.server.server_port) for a in addresses],
                        'free': shutil.disk_usage(DATA).free, 'max_size': MAX_SIZE})
         elif path in ('/', '/app.js', '/style.css', '/favicon.svg'):
